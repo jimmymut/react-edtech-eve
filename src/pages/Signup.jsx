@@ -1,24 +1,46 @@
 import { useState } from "react"
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export function Signup(){
-    const [username, setUsername] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [Username, setUsername] = useState("");
+    const [Email, setEmail] = useState("");
+    const [Password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    function handleSubmit(e){
-        e.preventDefault();
-        const user = {
-            username: username,
-            email: email,
-            password: password,
+
+    // function handleSubmit(e){
+    //     e.preventDefault();
+    //     const user = {
+    //         username: username,
+    //         email: email,
+    //         password: password,
+    //     }
+    //     localStorage.setItem("user-object", JSON.stringify(user));
+    //     toast.success("Your successfully Registered");
+    //     document.getElementById("form").reset();
+    //     navigate("/login");
+    // }
+
+    async function handleSubmit(ev){
+        try {
+            ev.preventDefault();
+            setLoading(true);
+            await axios.post("http://localhost:3002/register", {
+                username: Username,
+                email: Email,
+                password: Password
+            });
+            toast.success("Registration successful");
+            navigate("/login");
+        } catch (error) {
+            console.log(error);
+            toast.error(error.response.data.message);
+        }finally{
+            setLoading(false);
         }
-        localStorage.setItem("user-object", JSON.stringify(user));
-        toast.success("Your successfully Registered");
-        document.getElementById("form").reset();
-        navigate("/login");
     }
     return(
         <div className="flex flex-col items-center justify-center h-screen bg-blue-400">
@@ -57,8 +79,11 @@ export function Signup(){
                 </div>
                 <button 
                 type="submit"
+                disabled={loading}
                 className="w-full px-3 rounded bg-blue-500 text-white mt-1.5"
-                >Sing Up</button>
+                >
+                    {loading? "Loading...": "Sing Up"}
+                </button>
             </form>
         </div>
     )

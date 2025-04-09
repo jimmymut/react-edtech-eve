@@ -1,27 +1,33 @@
 import { useState } from "react"
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export function Login(){
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [submitting, setSubmittng] = useState(false);
     const navigate = useNavigate();
 
-    function handleSubmit(e){
-        e.preventDefault();
-        const savedData = localStorage.getItem("user-object");
-        if(!savedData){
-            toast.error("User not found")
-            return;
+    async function handleSubmit(e){
+        try {
+            e.preventDefault();
+            setSubmittng(true);
+            const res = await axios.post("http://localhost:3002/login", {
+                email,
+                password
+            });
+            localStorage.setItem("token", res.data.token);
+            localStorage
+            .setItem("user-date", JSON.stringify(res.data.userData));
+            toast.success("Login is successful");
+            navigate("/dashboard", {replace: true});
+        } catch (error) {
+            console.log(error);
+            toast.error(error.response.data.message);
+        }finally{
+            setSubmittng(false)
         }
-        const user = JSON.parse(savedData);
-        if(email !== user.email || password !== user.password){
-            toast.error("Invalid credentials");
-            return;
-        }
-        toast.success("Login success");
-        document.getElementById("form").reset();
-        navigate("/dashboard");
     }
     return(
         <div className="flex flex-col items-center justify-center h-screen bg-blue-400">
@@ -51,8 +57,9 @@ export function Login(){
                 </div>
                 <button 
                 type="submit"
-                className="w-full px-3 rounded bg-blue-500 text-white mt-1.5"
-                >Sign In</button>
+                disabled={submitting}
+                className="w-full px-3 rounded bg-blue-500 text-white mt-1.5 cursor-pointer"
+                >{submitting?"Processing...": "Sign In"}</button>
             </form>
         </div>
     )
